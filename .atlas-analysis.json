@@ -1,0 +1,60 @@
+{
+  "projectType": "general",
+  "projectName": "Daikin Etiquetas",
+  "projectDescription": "Windows Forms warehouse support application for searching and printing Daikin part number labels by supplier part number",
+  "theme": "linden",
+  "primaryColor": "#0066CC",
+  "lightColor": "#4D94E0",
+  "darkColor": "#004C99",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "User Guide",
+        "pages": [
+          "user-guide/searching-parts",
+          "user-guide/printing-labels",
+          "user-guide/interface-overview"
+        ]
+      },
+      {
+        "group": "Developer Guide",
+        "pages": [
+          "developer-guide/architecture",
+          "developer-guide/api-integration",
+          "developer-guide/ui-components",
+          "developer-guide/building"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/requirements",
+          "reference/troubleshooting",
+          "reference/faq"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Search Daikin part numbers by supplier part number",
+    "Integration with warehouse support dashboard API",
+    "Label printing functionality for matched parts",
+    "Custom dark-themed Windows Forms interface",
+    "Real-time data grid display of search results"
+  ],
+  "publicApiSurface": [
+    "Form1.GetDataFromApi()",
+    "Form1.ProcessApiResponse(string jsonResponse)",
+    "Form1.HandlePrint(string supplierPartNumber, string daikinPartNumber)",
+    "Form1.SetupDataGridView()",
+    "Program.Main()"
+  ]
+}
