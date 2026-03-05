@@ -1,0 +1,216 @@
+---
+title: Installation
+description: How to install and configure Daikin Etiquetas on Windows
+---
+
+## System Requirements
+
+Before installing Daikin Etiquetas, ensure your system meets the following requirements:
+
+<CardGroup cols={2}>
+  <Card title="Operating System" icon="windows">
+    Windows 10 or later (64-bit)
+  </Card>
+  
+  <Card title=".NET Runtime" icon="code">
+    .NET 8.0 Runtime for Windows Desktop
+  </Card>
+  
+  <Card title="Network Access" icon="network-wired">
+    Internet connectivity to reach the Warehouse Support Dashboard API
+  </Card>
+  
+  <Card title="Printer" icon="print">
+    Label printer configured in Windows (optional, for printing functionality)
+  </Card>
+</CardGroup>
+
+<Warning>
+The application requires .NET 8.0 Windows Desktop Runtime. The standard .NET 8.0 Runtime is not sufficient - you must install the Windows Desktop Runtime variant.
+</Warning>
+
+## Step 1: Install .NET 8.0 Runtime
+
+If you don't already have .NET 8.0 Runtime installed:
+
+<Steps>
+  <Step title="Download the Runtime">
+    Visit the official .NET download page:
+    
+    ```
+    https://dotnet.microsoft.com/download/dotnet/8.0
+    ```
+    
+    Locate the **".NET Desktop Runtime 8.0"** section and click the Windows x64 installer download link.
+  </Step>
+  
+  <Step title="Run the Installer">
+    Double-click the downloaded installer file (e.g., `windowsdesktop-runtime-8.0.x-win-x64.exe`).
+    
+    Follow the installation wizard prompts. Accept the license agreement and click **Install**.
+  </Step>
+  
+  <Step title="Verify Installation">
+    Open Command Prompt or PowerShell and run:
+    
+    ```bash
+    dotnet --list-runtimes
+    ```
+    
+    You should see output similar to:
+    
+    ```
+    Microsoft.WindowsDesktop.App 8.0.x [C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App]
+    ```
+  </Step>
+</Steps>
+
+## Step 2: Download Daikin Etiquetas
+
+<Info>
+Contact your IT administrator or warehouse manager to obtain the latest Etiquetas.exe file and any required configuration files.
+</Info>
+
+The application typically comes as a single executable or a compressed archive containing:
+
+- `Etiquetas.exe` - The main application executable
+- `Etiquetas.dll` - Application library
+- `Etiquetas.runtimeconfig.json` - Runtime configuration
+- `Etiquetas.deps.json` - Dependency manifest
+
+## Step 3: Install the Application
+
+<Steps>
+  <Step title="Choose Installation Location">
+    Create a dedicated folder for the application, for example:
+    
+    ```
+    C:\Program Files\DaikinEtiquetas\
+    ```
+    
+    Or for a user-specific installation:
+    
+    ```
+    C:\Users\[YourUsername]\AppData\Local\DaikinEtiquetas\
+    ```
+  </Step>
+  
+  <Step title="Extract Files">
+    If you received a compressed archive (ZIP file), extract all files to the installation folder.
+    
+    If you received individual files, copy all files to the installation folder.
+  </Step>
+  
+  <Step title="Create Desktop Shortcut (Optional)">
+    For easier access:
+    
+    1. Right-click on `Etiquetas.exe`
+    2. Select **Send to → Desktop (create shortcut)**
+    3. Rename the shortcut to "Daikin Etiquetas" if desired
+  </Step>
+</Steps>
+
+## Step 4: Verify Installation
+
+<Steps>
+  <Step title="Launch the Application">
+    Double-click `Etiquetas.exe` or the desktop shortcut you created.
+    
+    The application window should open with the Daikin logo and a search interface.
+  </Step>
+  
+  <Step title="Test Network Connectivity">
+    Enter any test supplier part number (e.g., "TEST123") and click **Search**.
+    
+    - If the results table appears (even if empty), the API connection is working
+    - If you see an error message about network connectivity, verify your internet connection and firewall settings
+  </Step>
+</Steps>
+
+<Note>
+The application does not require administrator privileges to run, but you may need admin rights to install files in the Program Files directory.
+</Note>
+
+## Configuration
+
+Daikin Etiquetas is pre-configured to connect to the Warehouse Support Dashboard API. No additional configuration is required for standard installations.
+
+### API Configuration
+
+The application connects to:
+
+```
+https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData
+```
+
+with Report ID: `2167`
+
+<Warning>
+If you need to modify the API endpoint or report ID, you will need to rebuild the application from source code, as these values are compiled into the application.
+</Warning>
+
+### Printer Configuration
+
+To enable label printing:
+
+1. Ensure your label printer is installed and configured in Windows
+2. Set it as the default printer, or the application will prompt you to select a printer when printing
+3. Test the printer with a standard Windows test page before using it with Daikin Etiquetas
+
+## Troubleshooting
+
+### Application Won't Start
+
+**Symptom**: Double-clicking Etiquetas.exe does nothing or shows an error about missing runtime.
+
+**Solution**: Ensure .NET 8.0 Windows Desktop Runtime is installed:
+
+```bash
+dotnet --list-runtimes | findstr "WindowsDesktop.App 8.0"
+```
+
+If not found, reinstall the runtime from Step 1.
+
+### Network Connection Errors
+
+**Symptom**: Error message when clicking Search: "Error en la solicitud: [network error]"
+
+**Solutions**:
+- Verify internet connectivity
+- Check if your firewall is blocking the application
+- Ensure `azuappsrvuat01v.mcquay.com` is accessible from your network
+- Contact your network administrator if the API endpoint requires VPN access
+
+### Missing Visual Elements
+
+**Symptom**: Application window appears but images or logos are missing.
+
+**Solution**: Ensure all files from the installation package are in the same directory as Etiquetas.exe, particularly any .dll files.
+
+## Updating the Application
+
+To update to a newer version:
+
+<Steps>
+  <Step title="Close the Application">
+    Ensure Daikin Etiquetas is completely closed before updating.
+  </Step>
+  
+  <Step title="Backup Current Version (Optional)">
+    Copy the entire installation folder to a backup location in case you need to rollback.
+  </Step>
+  
+  <Step title="Replace Files">
+    Extract or copy the new version files to the same installation directory, overwriting existing files.
+  </Step>
+  
+  <Step title="Launch and Verify">
+    Start the application and perform a test search to verify the update was successful.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+  Learn how to perform your first search and print labels
+</Card>

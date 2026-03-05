@@ -1,0 +1,486 @@
+---
+title: UI Components Reference
+description: Complete reference for all UI components in Daikin Etiquetas
+---
+
+## Overview
+
+Daikin Etiquetas features a custom-styled Windows Forms interface with a borderless window, dark theme, and interactive components. All UI components are defined in `Form1.Designer.cs` and controlled by event handlers in `Form1.cs`.
+
+## Form Configuration
+
+### Main Form Properties
+
+```csharp Form1.Designer.cs:213-223
+AutoScaleDimensions = new SizeF(8F, 20F);
+AutoScaleMode = AutoScaleMode.Font;
+ClientSize = new Size(1235, 841);
+Controls.Add(pnlBackground);
+FormBorderStyle = FormBorderStyle.None;
+StartPosition = FormStartPosition.CenterScreen;
+Text = "Etiquetas";
+```
+
+<ParamField path="Size" type="Size">
+  1235 × 841 pixels
+</ParamField>
+
+<ParamField path="Border Style" type="FormBorderStyle">
+  `FormBorderStyle.None` - Borderless window
+</ParamField>
+
+<ParamField path="Start Position" type="FormStartPosition">
+  `FormStartPosition.CenterScreen` - Opens centered
+</ParamField>
+
+## Panel Components
+
+### Background Panel
+
+**Name**: `pnlBackground`  
+**Location**: Form1.Designer.cs:50-65
+
+```csharp
+pnlBackground.BackColor = Color.FromArgb(45, 45, 45);
+pnlBackground.Dock = DockStyle.Fill;
+pnlBackground.Size = new Size(1235, 841);
+```
+
+<ParamField path="Background Color" type="Color">
+  RGB(45, 45, 45) - Dark gray
+</ParamField>
+
+<ParamField path="Dock" type="DockStyle">
+  `DockStyle.Fill` - Fills entire form
+</ParamField>
+
+**Child Components**:
+- Data grid view (`daikinPartN_tbl`)
+- Supplier part number label (`lblSupplierPartNumber`)
+- Search button (`btnSearch`)
+- Input separator line (`lnSupplierP_N`)
+- Input text box (`txtSupplierP_N`)
+- Logo picture box (`pictureBox1`)
+- Top panel (`pnlTop`)
+
+### Top Panel (Title Bar)
+
+**Name**: `pnlTop`  
+**Location**: Form1.Designer.cs:143-156
+
+```csharp
+pnlTop.BackColor = Color.FromArgb(30, 30, 30);
+pnlTop.Dock = DockStyle.Top;
+pnlTop.Size = new Size(1235, 61);
+pnlTop.MouseMove += pnlTop_MouseMove;
+```
+
+<ParamField path="Background Color" type="Color">
+  RGB(30, 30, 30) - Darker gray for contrast
+</ParamField>
+
+<ParamField path="Height" type="int">
+  61 pixels
+</ParamField>
+
+**Features**:
+- Custom window dragging functionality
+- Application title and icon
+- Window control buttons (minimize, close)
+
+### Input Separator Line
+
+**Name**: `lnSupplierP_N`  
+**Location**: Form1.Designer.cs:107-114
+
+```csharp
+lnSupplierP_N.BackColor = Color.White;
+lnSupplierP_N.Location = new Point(354, 435);
+lnSupplierP_N.Size = new Size(544, 4);
+```
+
+A thin white line under the input text box for visual styling.
+
+## Text Input Component
+
+### Supplier Part Number TextBox
+
+**Name**: `txtSupplierP_N`  
+**Location**: Form1.Designer.cs:116-131
+
+```csharp
+txtSupplierP_N.BackColor = Color.FromArgb(45, 45, 45);
+txtSupplierP_N.BorderStyle = BorderStyle.None;
+txtSupplierP_N.Font = new Font("Arial", 14.25F, FontStyle.Bold | FontStyle.Italic);
+txtSupplierP_N.ForeColor = Color.FromArgb(150, 150, 150);
+txtSupplierP_N.Location = new Point(354, 400);
+txtSupplierP_N.Size = new Size(543, 44);
+txtSupplierP_N.Text = "Supplier Part Number";
+txtSupplierP_N.Multiline = true;
+```
+
+<ParamField path="Font" type="Font">
+  Arial, 14.25pt, Bold Italic
+</ParamField>
+
+<ParamField path="Initial Text" type="string">
+  "Supplier Part Number" (placeholder)
+</ParamField>
+
+<ParamField path="Border" type="BorderStyle">
+  `BorderStyle.None` - Borderless for modern look
+</ParamField>
+
+### TextBox Events
+
+**MouseClick Event** (Form1.cs:41-44):
+```csharp
+private void txtSupplierP_N_MouseClick(object sender, MouseEventArgs e)
+{
+    resetText(txtSupplierP_N, "Supplier Part Number");
+}
+```
+Clears placeholder text when clicked.
+
+**TextChanged Event** (Form1.cs:46-52):
+```csharp
+private void txtSupplierP_N_TextChanged(object sender, EventArgs e)
+{
+    lblSupplierPartNumber.Visible = true;
+    txtSupplierP_N.ForeColor = Color.FromArgb(250, 250, 250);
+    txtSupplierP_N.Font = new Font("Arial", 14.25f, FontStyle.Bold);
+}
+```
+Shows label and changes styling when user types.
+
+## Button Components
+
+### Search Button
+
+**Name**: `btnSearch`  
+**Location**: Form1.Designer.cs:94-105
+
+```csharp
+btnSearch.Cursor = Cursors.Hand;
+btnSearch.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+btnSearch.Location = new Point(581, 475);
+btnSearch.Size = new Size(90, 37);
+btnSearch.Text = "Search";
+btnSearch.Click += btnSearch_Click;
+```
+
+<ParamField path="Text" type="string">
+  "Search"
+</ParamField>
+
+<ParamField path="Font" type="Font">
+  Segoe UI, 12pt, Bold
+</ParamField>
+
+<ParamField path="Cursor" type="Cursors">
+  Hand cursor on hover
+</ParamField>
+
+**Click Handler** (Form1.cs:95-105):
+```csharp
+private async void btnSearch_Click(object sender, EventArgs e)
+{
+    if (string.IsNullOrWhiteSpace(txtSupplierP_N.Text) || 
+        txtSupplierP_N.Text == "Supplier Part Number")
+    {
+        MessageBox.Show("Please enter a Supplier Part Number", 
+                        "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
+    
+    daikinPartN_tbl.Visible = true;
+    await GetDataFromApi();
+}
+```
+
+### Close Button (Label)
+
+**Name**: `CloseLbl`  
+**Location**: Form1.Designer.cs:197-211
+
+```csharp
+CloseLbl.Cursor = Cursors.Hand;
+CloseLbl.Font = new Font("Segoe UI", 18F);
+CloseLbl.ForeColor = Color.White;
+CloseLbl.Location = new Point(1190, 8);
+CloseLbl.Text = "X";
+```
+
+**Interactive Events**:
+- **MouseHover**: Changes color to red (Form1.cs:26-29)
+- **MouseLeave**: Returns to white (Form1.cs:31-34)
+- **MouseClick**: Closes application (Form1.cs:36-39)
+
+### Minimize Button (Label)
+
+**Name**: `minimizeLbl`  
+**Location**: Form1.Designer.cs:182-195
+
+```csharp
+minimizeLbl.Cursor = Cursors.Hand;
+minimizeLbl.Font = new Font("Bauhaus 93", 24F, FontStyle.Bold);
+minimizeLbl.ForeColor = Color.White;
+minimizeLbl.Location = new Point(1146, 0);
+minimizeLbl.Text = "_";
+```
+
+**Interactive Events**:
+- **MouseHover**: Changes color to red (Form1.cs:66-69)
+- **MouseLeave**: Returns to white (Form1.cs:71-74)
+- **MouseClick**: Minimizes window (Form1.cs:76-79)
+
+## Label Components
+
+### Title Label
+
+**Name**: `lblTitle`  
+**Location**: Form1.Designer.cs:158-168
+
+```csharp
+lblTitle.Font = new Font("Microsoft YaHei", 15.75F);
+lblTitle.ForeColor = Color.White;
+lblTitle.Location = new Point(85, 13);
+lblTitle.Text = "Etiquetas";
+lblTitle.MouseMove += lblTitle_MouseMove;
+```
+
+<ParamField path="Text" type="string">
+  "Etiquetas"
+</ParamField>
+
+<ParamField path="Font" type="Font">
+  Microsoft YaHei, 15.75pt
+</ParamField>
+
+The title label also supports window dragging via `MouseMove` event.
+
+### Supplier Part Number Label
+
+**Name**: `lblSupplierPartNumber`  
+**Location**: Form1.Designer.cs:82-92
+
+```csharp
+lblSupplierPartNumber.Font = new Font("Arial", 12F, FontStyle.Bold | FontStyle.Italic);
+lblSupplierPartNumber.ForeColor = Color.FromArgb(150, 150, 150);
+lblSupplierPartNumber.Location = new Point(359, 360);
+lblSupplierPartNumber.Text = "Supplier Part Number";
+lblSupplierPartNumber.Visible = false;
+```
+
+Initially hidden, becomes visible when user types in the text box.
+
+## DataGridView Component
+
+### Results Grid
+
+**Name**: `daikinPartN_tbl`  
+**Location**: Form1.Designer.cs:67-80
+
+```csharp
+daikinPartN_tbl.AllowUserToAddRows = false;
+daikinPartN_tbl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | 
+                         AnchorStyles.Left | AnchorStyles.Right;
+daikinPartN_tbl.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+daikinPartN_tbl.BackgroundColor = SystemColors.ControlDarkDark;
+daikinPartN_tbl.Location = new Point(213, 550);
+daikinPartN_tbl.ReadOnly = true;
+daikinPartN_tbl.Size = new Size(812, 188);
+daikinPartN_tbl.CellClick += daikinPartN_tbl_CellClick;
+```
+
+<ParamField path="Size" type="Size">
+  812 × 188 pixels
+</ParamField>
+
+<ParamField path="AutoSize" type="DataGridViewAutoSizeColumnsMode">
+  `Fill` - Columns fill available width
+</ParamField>
+
+<ParamField path="ReadOnly" type="bool">
+  `true` - Users cannot edit data
+</ParamField>
+
+<ParamField path="AllowUserToAddRows" type="bool">
+  `false` - No empty row at bottom
+</ParamField>
+
+### Grid Setup
+
+**Method**: `SetupDataGridView` (Form1.cs:107-122)
+
+```csharp
+private void SetupDataGridView()
+{
+    daikinPartN_tbl.Columns.Clear();
+    
+    // Add Print button column
+    DataGridViewButtonColumn btnColumn = new DataGridViewButtonColumn();
+    btnColumn.HeaderText = "Print";
+    btnColumn.Name = "Print";
+    btnColumn.Text = "Print";
+    btnColumn.UseColumnTextForButtonValue = true;
+    
+    daikinPartN_tbl.Columns.Add(btnColumn);
+    daikinPartN_tbl.Columns.Add("SupplierPartNumber", "Supplier Part Number");
+    daikinPartN_tbl.Columns.Add("DaikinPartNumber", "Daikin Part Number");
+    
+    daikinPartN_tbl.CellClick += daikinPartN_tbl_CellClick;
+}
+```
+
+### Grid Columns
+
+<ParamField path="Print" type="DataGridViewButtonColumn">
+  Button column that triggers print functionality
+</ParamField>
+
+<ParamField path="SupplierPartNumber" type="DataGridViewTextBoxColumn">
+  Displays supplier part number from API
+</ParamField>
+
+<ParamField path="DaikinPartNumber" type="DataGridViewTextBoxColumn">
+  Displays corresponding Daikin part number from API
+</ParamField>
+
+### Grid Event Handler
+
+**CellClick Event** (Form1.cs:169-178):
+
+```csharp
+private void daikinPartN_tbl_CellClick(object sender, DataGridViewCellEventArgs e)
+{
+    if (e.ColumnIndex == 0 && e.RowIndex >= 0)
+    {
+        string supplierPartNumber = daikinPartN_tbl.Rows[e.RowIndex]
+            .Cells["SupplierPartNumber"].Value.ToString();
+        string daikinPartNumber = daikinPartN_tbl.Rows[e.RowIndex]
+            .Cells["DaikinPartNumber"].Value.ToString();
+        
+        HandlePrint(supplierPartNumber, daikinPartNumber);
+    }
+}
+```
+
+Detects clicks on the Print button (column index 0) and extracts row data.
+
+## PictureBox Components
+
+### Daikin Logo
+
+**Name**: `pictureBox1`  
+**Location**: Form1.Designer.cs:132-141
+
+```csharp
+pictureBox1.Image = Properties.Resources.Daikin_logo;
+pictureBox1.Location = new Point(354, 95);
+pictureBox1.Size = new Size(543, 196);
+pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+```
+
+<ParamField path="Image Source" type="Resource">
+  `Properties.Resources.Daikin_logo`
+</ParamField>
+
+<ParamField path="Size Mode" type="PictureBoxSizeMode">
+  `StretchImage` - Scales to fit
+</ParamField>
+
+### Pichon Icon
+
+**Name**: `pcbPichonKun`  
+**Location**: Form1.Designer.cs:170-180
+
+```csharp
+pcbPichonKun.Image = Properties.Resources.pichonkun;
+pcbPichonKun.Location = new Point(25, 1);
+pcbPichonKun.Size = new Size(37, 53);
+pcbPichonKun.SizeMode = PictureBoxSizeMode.StretchImage;
+pcbPichonKun.MouseMove += lblTitle_MouseMove;
+```
+
+Small icon in the title bar that also supports window dragging.
+
+## Custom Styling Patterns
+
+### Dynamic Color Changes
+
+Components change color on interaction:
+
+```csharp Form1.cs:26-34
+private void CloseLbl_MouseHover(object sender, EventArgs e)
+{
+    CloseLbl.ForeColor = Color.Red;
+}
+
+private void CloseLbl_MouseLeave(object sender, EventArgs e)
+{
+    CloseLbl.ForeColor = Color.White;
+}
+```
+
+### Font Style Transitions
+
+Text box changes from placeholder to input style:
+
+```csharp Form1.cs:50-52
+txtSupplierP_N.ForeColor = Color.FromArgb(250, 250, 250);
+txtSupplierP_N.Font = new Font("Arial", 14.25f, FontStyle.Bold);
+```
+
+### Visibility Toggles
+
+Components show/hide based on state:
+
+```csharp Form1.cs:12,48,103
+daikinPartN_tbl.Visible = false;          // Initially hidden
+lblSupplierPartNumber.Visible = true;      // Shows on input
+daikinPartN_tbl.Visible = true;            // Shows on search
+```
+
+## Window Dragging Implementation
+
+Custom window movement is implemented through mouse tracking:
+
+```csharp Form1.cs:81-93
+private void moveFrm(MouseEventArgs e)
+{
+    if (e.Button != MouseButtons.Left)
+    {
+        posX = e.X;  // Record position
+        posY = e.Y;
+    }
+    else
+    {
+        Left = Left + e.X - posX;  // Move form
+        Top = Top + (e.Y - posY);
+    }
+}
+```
+
+This method is called by:
+- `pnlTop.MouseMove` event
+- `lblTitle.MouseMove` event
+- `pcbPichonKun.MouseMove` event
+
+## Component Hierarchy
+
+```
+Form1 (Borderless)
+└── pnlBackground (Dark gray, 45,45,45)
+    ├── pnlTop (Darker gray, 30,30,30)
+    │   ├── pcbPichonKun (Icon)
+    │   ├── lblTitle ("Etiquetas")
+    │   ├── minimizeLbl ("_")
+    │   └── CloseLbl ("X")
+    ├── pictureBox1 (Daikin logo)
+    ├── lblSupplierPartNumber (Field label)
+    ├── txtSupplierP_N (Input field)
+    ├── lnSupplierP_N (Separator line)
+    ├── btnSearch (Search button)
+    └── daikinPartN_tbl (Results grid)
+```

@@ -1,0 +1,239 @@
+---
+title: 'Troubleshooting'
+description: 'Common issues and solutions for Daikin Etiquetas'
+---
+
+## Common Issues
+
+<AccordionGroup>
+
+<Accordion title="Error en la solicitud: HTTP request errors">
+
+### Symptom
+
+You receive an error message: **"Error en la solicitud: [error details]"**
+
+### Causes
+
+- No internet connection
+- API server is unreachable
+- Firewall blocking HTTPS requests
+- Network timeout
+- DNS resolution failure
+
+### Solutions
+
+1. **Check your internet connection**
+   ```
+   ping azuappsrvuat01v.mcquay.com
+   ```
+   If the ping fails, verify your network connectivity.
+
+2. **Verify firewall settings**
+   - Ensure outbound HTTPS traffic is allowed
+   - Whitelist `azuappsrvuat01v.mcquay.com` in your firewall
+   - Check corporate proxy settings
+
+3. **Test API accessibility**
+   - Try accessing the API host in a web browser
+   - Contact your network administrator if the host is blocked
+
+4. **Check for VPN requirements**
+   - Some networks may require VPN connection to access internal APIs
+   - Connect to your corporate VPN and retry
+
+<Warning>
+If you see "No such host is known" or similar DNS errors, the API hostname may not be resolvable from your network.
+</Warning>
+
+</Accordion>
+
+<Accordion title="Error procesando la respuesta: JSON parsing errors">
+
+### Symptom
+
+You receive an error message: **"Error procesando la respuesta: [error details]"**
+
+### Causes
+
+- API returned unexpected data format
+- Malformed JSON response
+- Empty or null response from API
+- API version mismatch
+
+### Solutions
+
+1. **Verify the part number format**
+   - Ensure you entered a valid supplier part number
+   - Check for special characters or extra spaces
+   - Remove any leading/trailing whitespace
+
+2. **Check API response**
+   - The API may have returned an error in a different format
+   - Contact your system administrator to verify API status
+
+3. **Retry the search**
+   - Click the search button again
+   - Try a different known valid part number
+
+4. **Check for API updates**
+   - The API response format may have changed
+   - Contact support for application updates
+
+<Note>
+This error occurs when the JSON data structure from the API doesn't match the expected format with `Supplier_Part_number` and `Daikin_Part_Number` fields.
+</Note>
+
+</Accordion>
+
+<Accordion title="Please enter a Supplier Part Number">
+
+### Symptom
+
+You receive a warning: **"Please enter a Supplier Part Number"**
+
+### Causes
+
+- The search field is empty
+- Only whitespace characters entered
+- The placeholder text "Supplier Part Number" is still shown
+
+### Solutions
+
+1. **Enter a valid part number**
+   - Click in the text field
+   - Type a valid supplier part number
+   - Click the Search button
+
+2. **Clear placeholder text**
+   - Click inside the text box to clear the placeholder
+   - Begin typing your part number
+
+3. **Remove extra spaces**
+   - Ensure you haven't just entered spaces
+   - Enter actual alphanumeric characters
+
+</Accordion>
+
+<Accordion title="No results found / Empty data grid">
+
+### Symptom
+
+The search completes without errors, but no results are displayed in the data grid.
+
+### Causes
+
+- The part number doesn't exist in the database
+- Incorrect part number format
+- No matching records for the given supplier part number
+
+### Solutions
+
+1. **Verify the part number**
+   - Double-check the supplier part number for typos
+   - Verify the part number format with your supplier documentation
+   - Try known valid part numbers to test functionality
+
+2. **Check part number variations**
+   - Try with or without hyphens/dashes
+   - Check if the part number is case-sensitive
+   - Remove any prefix or suffix codes
+
+3. **Contact support**
+   - If you believe the part number should exist, contact your administrator
+   - Request that the part number be added to the database
+
+</Accordion>
+
+<Accordion title="Application won't launch / Crashes on startup">
+
+### Symptom
+
+The application fails to start or crashes immediately after launching.
+
+### Causes
+
+- .NET 8.0 Runtime not installed
+- Corrupted application files
+- Missing dependencies
+- Incompatible Windows version
+
+### Solutions
+
+1. **Install .NET 8.0 Desktop Runtime**
+   - Download from [Microsoft .NET Downloads](https://dotnet.microsoft.com/download/dotnet/8.0)
+   - Install the **Desktop Runtime** (includes Windows Forms)
+   - Restart your computer
+
+2. **Verify Windows version**
+   - Ensure you're running Windows 10 (1809+), Windows 11, or Windows Server 2019+
+   - Check for Windows updates
+
+3. **Reinstall the application**
+   - Uninstall the current version
+   - Download a fresh copy
+   - Reinstall and try again
+
+4. **Check Event Viewer**
+   - Open Windows Event Viewer
+   - Look for application errors under Windows Logs > Application
+   - Note any .NET runtime errors
+
+<Warning>
+If you see errors about missing `WindowsDesktop.App` or `.NET Desktop Runtime`, you must install the Desktop Runtime, not just the base .NET Runtime.
+</Warning>
+
+</Accordion>
+
+<Accordion title="Print button does nothing / Printing not working">
+
+### Symptom
+
+Clicking the Print button shows a message but doesn't actually print labels.
+
+### Causes
+
+- Print functionality is currently a placeholder
+- No printer configured
+- Printer driver issues
+
+### Current Status
+
+The print feature currently displays a confirmation message with the part numbers but does not send output to a physical printer. This is the expected behavior in the current version.
+
+### Solutions
+
+1. **For development/testing**
+   - The message box confirms which record would be printed
+   - Use this to verify correct data selection
+
+2. **For production printing**
+   - Contact your system administrator about enabling print functionality
+   - Request an application update with full print support
+
+<Note>
+The HandlePrint method in Form1.cs:180 currently shows a MessageBox but doesn't implement actual printer output.
+</Note>
+
+</Accordion>
+
+</AccordionGroup>
+
+## Getting Help
+
+If you continue experiencing issues after trying these solutions:
+
+1. **Collect error details**
+   - Take screenshots of error messages
+   - Note the exact part numbers that cause issues
+   - Check Windows Event Viewer for additional details
+
+2. **Contact support**
+   - Provide the error message text
+   - Include your Windows version
+   - Mention any recent system changes
+
+3. **Check with your administrator**
+   - Verify you have proper network access
+   - Confirm the API endpoint is accessible from your location
+   - Ensure you have necessary permissions

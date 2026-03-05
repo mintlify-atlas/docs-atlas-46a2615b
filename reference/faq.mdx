@@ -1,0 +1,239 @@
+---
+title: 'Frequently Asked Questions'
+description: 'Common questions about Daikin Etiquetas'
+---
+
+## General Questions
+
+<AccordionGroup>
+
+<Accordion title="What is Daikin Etiquetas?">
+
+Daikin Etiquetas is a Windows desktop application designed for warehouse and inventory management. It provides quick lookup functionality to find Daikin part numbers based on supplier part numbers.
+
+**Key Features:**
+- Search supplier part numbers
+- Retrieve corresponding Daikin part numbers
+- Display results in an easy-to-read data grid
+- Label printing capability (for generating part number labels)
+
+**Use Cases:**
+- Warehouse operations
+- Inventory management
+- Part number cross-referencing
+- Label generation for parts
+
+The application is built with .NET 8.0 Windows Forms and provides a simple, user-friendly interface for warehouse staff.
+
+</Accordion>
+
+<Accordion title="How does the API integration work?">
+
+Daikin Etiquetas connects to a centralized API to retrieve part number data:
+
+**API Details:**
+- **Host**: `azuappsrvuat01v.mcquay.com`
+- **Endpoint**: `/SupportDashboard/Home/GetReportData`
+- **Report ID**: 2167 (part number lookup report)
+- **Protocol**: HTTPS
+
+**How it works:**
+
+1. You enter a supplier part number in the application
+2. The app sends an HTTPS request to the API with the part number as a parameter
+3. The API queries the database and returns matching records in JSON format
+4. The application parses the JSON response and displays results in the data grid
+
+**Data Returned:**
+- `Supplier_Part_number`: The original supplier part number
+- `Daikin_Part_Number`: The corresponding Daikin internal part number
+
+The connection is made using the `System.Net.Http.HttpClient` class and includes proper error handling for network issues.
+
+</Accordion>
+
+<Accordion title="Can I use this application offline?">
+
+No, Daikin Etiquetas requires an active internet connection to function.
+
+**Why internet is required:**
+- The application queries a remote API for part number data
+- No local database is maintained
+- All lookups are performed in real-time against the central database
+
+**Network Requirements:**
+- Active internet connection
+- Access to `azuappsrvuat01v.mcquay.com`
+- HTTPS connectivity (port 443)
+- Firewall rules allowing outbound connections to the API host
+
+<Warning>
+If you're working in an area without network connectivity, the application will not be able to perform searches. Contact your IT department about network access.
+</Warning>
+
+</Accordion>
+
+<Accordion title="What data is returned when I search?">
+
+When you search for a supplier part number, the application returns:
+
+**Data Fields:**
+
+| Column | Description |
+|--------|-------------|
+| Supplier Part Number | The part number from the supplier/manufacturer |
+| Daikin Part Number | The internal Daikin part number for the same item |
+| Print Button | Action button to print a label for that specific part |
+
+**Response Format:**
+
+The API returns a JSON array of objects, where each object contains:
+```json
+{
+  "Supplier_Part_number": "ABC12345",
+  "Daikin_Part_Number": "DKN-67890"
+}
+```
+
+**Multiple Results:**
+- A single supplier part number may return multiple Daikin part numbers
+- All matching records are displayed in the grid
+- Each row has its own Print button for label generation
+
+<Note>
+If no results are found, the data grid will be empty. This may indicate the part number doesn't exist in the database or was entered incorrectly.
+</Note>
+
+</Accordion>
+
+<Accordion title="How do I report issues or request features?">
+
+**For Technical Issues:**
+
+1. **Collect information**
+   - Screenshot of the error message
+   - The exact part number you were searching
+   - Your Windows version (run `winver` command)
+   - .NET Runtime version (check installed programs)
+
+2. **Contact your IT support**
+   - Provide all collected information
+   - Describe what you were doing when the issue occurred
+   - Mention any recent system changes
+
+3. **Check common issues first**
+   - Review the [Troubleshooting](/reference/troubleshooting) guide
+   - Verify you meet all [System Requirements](/reference/requirements)
+   - Test with a known valid part number
+
+**For Feature Requests:**
+
+- Contact your warehouse manager or system administrator
+- Describe the feature you need and how it would help your workflow
+- Provide examples of how the feature would be used
+
+**For API Issues:**
+
+If the problem appears to be with the API or database:
+- Contact your database administrator
+- Mention the API endpoint: `azuappsrvuat01v.mcquay.com`
+- Provide the part numbers that aren't working correctly
+
+</Accordion>
+
+<Accordion title="Does the Print feature work?">
+
+**Current Status:**
+
+The Print button is currently implemented as a placeholder. When you click Print on any row:
+- A message box appears showing the part numbers
+- No actual label is printed to a physical printer
+- This confirms data selection is working correctly
+
+**Message Displayed:**
+```
+Imprimiendo etiqueta para:
+Supplier PN: [supplier part number]
+Daikin PN: [daikin part number]
+```
+
+**Future Implementation:**
+
+Full printing functionality may be added in a future version. This would include:
+- Integration with label printers
+- Customizable label formats
+- Print preview functionality
+- Batch printing multiple labels
+
+**Workaround:**
+
+For now, you can:
+1. Use the Print button to confirm correct data
+2. Manually note the part numbers shown
+3. Use existing label printing tools with the retrieved part numbers
+
+<Note>
+Check with your system administrator about when full printing functionality will be available.
+</Note>
+
+</Accordion>
+
+<Accordion title="What languages does the application support?">
+
+**Current Language:**
+
+The application interface is primarily in English, with some error messages in Spanish:
+- "Error en la solicitud" (Request error)
+- "Error procesando la respuesta" (Error processing response)
+- "Imprimiendo etiqueta para" (Printing label for)
+
+**UI Language:**
+- Form labels and buttons: English
+- Error messages: Mixed English/Spanish
+- Data column headers: English
+
+**API Communication:**
+
+All API communication uses English field names:
+- `Supplier_Part_number`
+- `Daikin_Part_Number`
+
+<Note>
+If you need the application in a specific language, contact your administrator about localization options.
+</Note>
+
+</Accordion>
+
+<Accordion title="Can multiple users use the application simultaneously?">
+
+**Yes**, multiple users can run Daikin Etiquetas at the same time.
+
+**How it works:**
+- Each user runs their own instance of the application on their Windows PC
+- All instances connect to the same shared API endpoint
+- Searches are independent and don't affect other users
+- No data is stored locally, so no conflicts occur
+
+**Considerations:**
+
+1. **Network bandwidth**: Multiple simultaneous users will share network bandwidth
+2. **API limits**: Check with your administrator about any API rate limits
+3. **Licensing**: Verify licensing terms for your organization
+
+**Best Practices:**
+- Each warehouse workstation can have its own installation
+- No special configuration needed for multi-user environments
+- All users must have proper network access to the API
+
+</Accordion>
+
+</AccordionGroup>
+
+## Still Have Questions?
+
+If your question wasn't answered here:
+
+1. Check the [Troubleshooting](/reference/troubleshooting) guide for technical issues
+2. Review [System Requirements](/reference/requirements) for setup questions  
+3. Contact your system administrator or IT support team
+4. Refer to your organization's internal documentation

@@ -1,80 +1,266 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get started with Daikin Etiquetas in minutes
 ---
 
-## Get started in three steps
+This guide will walk you through your first search and label printing operation with Daikin Etiquetas.
 
-Get your documentation site running locally and make your first customization.
+<Info>
+Before starting, ensure you have [installed Daikin Etiquetas](/installation) and have access to supplier part numbers you need to look up.
+</Info>
 
-### Step 1: Set up your local environment
+## Launch the Application
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Open Daikin Etiquetas">
+    Double-click the `Etiquetas.exe` file or the desktop shortcut.
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    The application window will open, displaying:
+    - The Daikin logo at the top
+    - A search input field labeled "Supplier Part Number"
+    - A Search button
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    <Note>
+    The application uses a custom window frame with minimize and close buttons in the top-right corner. You can drag the top bar to move the window.
+    </Note>
+  </Step>
+</Steps>
 
-### Step 2: Deploy your changes
+## Perform Your First Search
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+<Steps>
+  <Step title="Enter Supplier Part Number">
+    Click on the text field that displays "Supplier Part Number" as placeholder text.
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    The placeholder text will clear automatically, and you can type the supplier part number you want to look up.
+    
+    ```text
+    Example: ABC123456
+    ```
+    
+    <Info>
+    The input field accepts alphanumeric characters. The text will appear in bold white font once you start typing.
+    </Info>
+  </Step>
+  
+  <Step title="Click Search">
+    Click the **Search** button to query the Warehouse Support Dashboard API.
+    
+    The application will:
+    1. Validate that you've entered a part number
+    2. Send an HTTP request to the API with your search query
+    3. Display results in a table below the search field
+    
+    <Warning>
+    If you click Search without entering a part number, you'll see a warning message: "Please enter a Supplier Part Number"
+    </Warning>
+  </Step>
+  
+  <Step title="View Search Results">
+    After a successful search, a results table will appear with three columns:
+    
+    | Column | Description |
+    |--------|-------------|
+    | **Print** | Button to print label for this part |
+    | **Supplier Part Number** | The supplier part number you searched for |
+    | **Daikin Part Number** | The corresponding Daikin part number |
+    
+    The results table will show all matching Daikin part numbers for the supplier part number you entered.
+    
+    <Info>
+    If no results are found, the table will be empty. Verify the supplier part number is correct or try a different part number.
+    </Info>
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Print a Label
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Select Part to Print">
+    In the results table, locate the row with the Daikin part number you want to print.
+    
+    Each row has a **Print** button in the first column.
+  </Step>
+  
+  <Step title="Click Print Button">
+    Click the **Print** button for the desired part number.
+    
+    A confirmation dialog will appear showing:
+    ```
+    Imprimiendo etiqueta para:
+    Supplier PN: [Your Supplier Part Number]
+    Daikin PN: [Corresponding Daikin Part Number]
+    ```
+    
+    Click **OK** to proceed with printing.
+    
+    <Note>
+    The current implementation shows a confirmation dialog. In production environments with printer integration, this will send the label directly to your configured label printer.
+    </Note>
+  </Step>
+  
+  <Step title="Verify Label">
+    Once printed, verify that the label contains:
+    - Correct supplier part number
+    - Correct Daikin part number
+    - Any additional formatting required for your warehouse
+  </Step>
+</Steps>
 
-### Step 3: Go live
+## Understanding the Search Process
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+When you click Search, the application performs the following operations:
 
-## Next steps
+```csharp
+// 1. Validates input
+if (string.IsNullOrWhiteSpace(txtSupplierP_N.Text) || 
+    txtSupplierP_N.Text == "Supplier Part Number")
+{
+    MessageBox.Show("Please enter a Supplier Part Number");
+    return;
+}
 
-Now that you have your docs running, explore these key features:
+// 2. Constructs API request
+string url = $"https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData?id=2167&parameters={{\"supplier_part_number\":\"{supplierPartNumber}\"}}";
+
+// 3. Sends HTTP GET request
+HttpResponseMessage response = await client.GetAsync(url);
+
+// 4. Processes JSON response
+var results = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonResponse);
+
+// 5. Populates results table
+foreach (var result in results)
+{
+    daikinPartN_tbl.Rows.Add(
+        "Print",
+        result["Supplier_Part_number"],
+        result["Daikin_Part_Number"]
+    );
+}
+```
+
+## API Response Format
+
+The Warehouse Support Dashboard API returns data in the following JSON format:
+
+```json
+[
+  {
+    "Supplier_Part_number": "ABC123456",
+    "Daikin_Part_Number": "DKN789012"
+  },
+  {
+    "Supplier_Part_number": "ABC123456",
+    "Daikin_Part_Number": "DKN789013"
+  }
+]
+```
+
+<Info>
+A single supplier part number may map to multiple Daikin part numbers. The application displays all matches in the results table.
+</Info>
+
+## Tips for Efficient Use
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Use Exact Part Numbers" icon="crosshairs">
+    The search performs exact matching. Ensure you enter the complete supplier part number without extra spaces.
+  </Card>
+  
+  <Card title="Multiple Results" icon="list">
+    If you see multiple Daikin part numbers for one supplier part, verify which one matches your specific item before printing.
+  </Card>
+  
+  <Card title="Search History" icon="clock-rotate-left">
+    The application doesn't save search history. Keep a separate record if you need to track lookups.
+  </Card>
+  
+  <Card title="Minimize to System Tray" icon="window-minimize">
+    Keep the application running and minimized for quick access throughout your shift.
+  </Card>
 </CardGroup>
 
+## Common Workflows
+
+### Single Part Lookup
+
+For occasional lookups:
+
+1. Launch application
+2. Enter supplier part number
+3. Click Search
+4. Print label(s) as needed
+5. Close application or minimize for later use
+
+### Batch Processing
+
+For processing multiple parts:
+
+1. Keep application window open
+2. Search first part number
+3. Print required label
+4. Clear the search field (click to select all, type new number)
+5. Repeat for each part
+
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+The application clears the placeholder text automatically when you click the search field, making it quick to enter a new search.
 </Note>
+
+## Troubleshooting Common Issues
+
+### No Results Found
+
+**Symptom**: Results table appears but is empty after searching.
+
+**Solutions**:
+- Verify the supplier part number is correct
+- Check for extra spaces before or after the part number
+- Confirm the part number exists in the Warehouse Support Dashboard database
+- Try searching for a known valid part number to verify API connectivity
+
+### Search Errors
+
+**Symptom**: Error message appears: "Error en la solicitud: [error details]"
+
+**Solutions**:
+- Check your internet connection
+- Verify the API endpoint is accessible (may require VPN)
+- Wait a moment and try again - the API may be temporarily unavailable
+- Contact your IT administrator if the error persists
+
+### Application Not Responding
+
+**Symptom**: Application freezes after clicking Search.
+
+**Solutions**:
+- Wait 10-15 seconds - the API may be slow to respond
+- Check your network connection
+- Close and restart the application
+- If the issue persists, contact technical support
+
+## Window Controls
+
+The application uses a custom window frame with these controls:
+
+| Control | Location | Function |
+|---------|----------|----------|
+| **Drag Bar** | Entire top panel | Click and drag to move window |
+| **Minimize (-)** | Top-right, second from right | Minimize to taskbar |
+| **Close (X)** | Top-right corner | Close application |
+
+<Info>
+The window controls change color (red) when you hover over them for visual feedback.
+</Info>
+
+## Next Steps
+
+Now that you're familiar with the basic workflow, you can:
+
+- Integrate Daikin Etiquetas into your daily warehouse operations
+- Set up keyboard shortcuts or automation if your workflow requires frequent lookups
+- Contact your warehouse manager for advanced printing configurations
+
+<Card title="Need Help?" icon="question">
+  Contact your IT department or warehouse supervisor for additional support or training.
+</Card>

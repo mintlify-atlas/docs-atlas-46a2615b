@@ -1,0 +1,477 @@
+---
+title: Building and Development
+description: Complete guide to building, debugging, and deploying Daikin Etiquetas
+---
+
+## Prerequisites
+
+### Required Software
+
+<ParamField path=".NET SDK" type="requirement" required>
+  .NET 8.0 SDK or later
+</ParamField>
+
+<ParamField path="Operating System" type="requirement" required>
+  Windows 10 or later (Windows Forms requirement)
+</ParamField>
+
+<ParamField path="IDE" type="recommendation">
+  Visual Studio 2022 or JetBrains Rider (optional but recommended)
+</ParamField>
+
+### Installing .NET 8.0 SDK
+
+<CodeGroup>
+
+```bash winget
+winget install Microsoft.DotNet.SDK.8
+```
+
+```powershell Manual Download
+# Download from: https://dotnet.microsoft.com/download/dotnet/8.0
+Invoke-WebRequest -Uri "https://dotnet.microsoft.com/download/dotnet/8.0" -OutFile "dotnet-sdk-8.0.exe"
+.\dotnet-sdk-8.0.exe
+```
+
+</CodeGroup>
+
+### Verify Installation
+
+```bash
+dotnet --version
+# Should output: 8.0.x or higher
+```
+
+## Project Configuration
+
+### Project File Structure
+
+The project is configured in `Etiquetas.csproj`:
+
+```xml Etiquetas.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+  </ItemGroup>
+</Project>
+```
+
+### Configuration Properties
+
+<ParamField path="OutputType" type="string">
+  `WinExe` - Windows executable (no console window)
+</ParamField>
+
+<ParamField path="TargetFramework" type="string">
+  `net8.0-windows` - .NET 8.0 with Windows-specific APIs
+</ParamField>
+
+<ParamField path="UseWindowsForms" type="bool">
+  `true` - Enables Windows Forms support
+</ParamField>
+
+<ParamField path="ImplicitUsings" type="bool">
+  `true` - Enables implicit global usings
+</ParamField>
+
+<ParamField path="Nullable" type="string">
+  `enable` - Enables nullable reference types
+</ParamField>
+
+## Project Dependencies
+
+### NuGet Packages
+
+<ParamField path="System.Net.Http" type="package">
+  Version 4.3.4 - HTTP client functionality
+</ParamField>
+
+### Implicit Framework References
+
+With `UseWindowsForms` enabled, the following are automatically included:
+- `System.Windows.Forms`
+- `System.Drawing`
+- `System.Text.Json`
+
+### Viewing Dependencies
+
+```bash
+dotnet list package
+```
+
+## Building the Application
+
+### Debug Build
+
+Build in Debug configuration with full debugging symbols:
+
+```bash
+dotnet build
+```
+
+Or with explicit configuration:
+
+```bash
+dotnet build --configuration Debug
+```
+
+<ParamField path="Output Location" type="path">
+  `bin/Debug/net8.0-windows/`
+</ParamField>
+
+<ParamField path="Debug Symbols" type="bool">
+  Included (`.pdb` files)
+</ParamField>
+
+<ParamField path="Optimizations" type="bool">
+  Disabled
+</ParamField>
+
+### Release Build
+
+Build optimized for production:
+
+```bash
+dotnet build --configuration Release
+```
+
+<ParamField path="Output Location" type="path">
+  `bin/Release/net8.0-windows/`
+</ParamField>
+
+<ParamField path="Optimizations" type="bool">
+  Enabled
+</ParamField>
+
+<ParamField path="Debug Symbols" type="bool">
+  Optional (can be generated separately)
+</ParamField>
+
+### Clean Build
+
+Remove all build artifacts:
+
+```bash
+dotnet clean
+```
+
+Clean and rebuild:
+
+```bash
+dotnet clean && dotnet build
+```
+
+## Running the Application
+
+### Run from Command Line
+
+```bash
+dotnet run
+```
+
+Run with specific configuration:
+
+```bash
+dotnet run --configuration Release
+```
+
+### Run Executable Directly
+
+After building:
+
+```powershell
+.\bin\Debug\net8.0-windows\Etiquetas.exe
+```
+
+## Output Structure
+
+### Debug Build Output
+
+```
+bin/Debug/net8.0-windows/
+├── Etiquetas.exe              # Main executable
+├── Etiquetas.dll              # Application assembly
+├── Etiquetas.pdb              # Debug symbols
+├── Etiquetas.deps.json        # Dependency manifest
+├── Etiquetas.runtimeconfig.json  # Runtime configuration
+└── System.Net.Http.dll        # Dependency assemblies
+```
+
+### Key Output Files
+
+<ParamField path="Etiquetas.exe" type="executable">
+  Windows executable entry point
+</ParamField>
+
+<ParamField path="Etiquetas.dll" type="assembly">
+  Main application assembly containing compiled code
+</ParamField>
+
+<ParamField path="Etiquetas.pdb" type="symbols">
+  Debug symbols for debugging and stack traces
+</ParamField>
+
+<ParamField path="Etiquetas.deps.json" type="metadata">
+  Dependency resolution metadata
+</ParamField>
+
+<ParamField path="Etiquetas.runtimeconfig.json" type="config">
+  Runtime configuration including framework version
+</ParamField>
+
+## Publishing for Deployment
+
+### Self-Contained Deployment
+
+Create a standalone executable with bundled .NET runtime:
+
+```bash
+dotnet publish --configuration Release --runtime win-x64 --self-contained true
+```
+
+<ParamField path="Output Location" type="path">
+  `bin/Release/net8.0-windows/win-x64/publish/`
+</ParamField>
+
+<ParamField path="Requires .NET Runtime" type="bool">
+  No - Runtime is included
+</ParamField>
+
+<ParamField path="File Size" type="string">
+  Larger (~70-100 MB with runtime)
+</ParamField>
+
+### Framework-Dependent Deployment
+
+Create a deployment that requires .NET runtime to be installed:
+
+```bash
+dotnet publish --configuration Release --runtime win-x64 --self-contained false
+```
+
+<ParamField path="Output Location" type="path">
+  `bin/Release/net8.0-windows/win-x64/publish/`
+</ParamField>
+
+<ParamField path="Requires .NET Runtime" type="bool">
+  Yes - .NET 8.0 must be installed on target machine
+</ParamField>
+
+<ParamField path="File Size" type="string">
+  Smaller (~2-5 MB without runtime)
+</ParamField>
+
+### Single-File Executable
+
+Publish as a single executable file:
+
+```bash
+dotnet publish --configuration Release --runtime win-x64 --self-contained true --output ./publish -p:PublishSingleFile=true
+```
+
+<ParamField path="Output" type="string">
+  Single `Etiquetas.exe` file
+</ParamField>
+
+<ParamField path="Deployment" type="string">
+  Copy single file to target machine
+</ParamField>
+
+## Development Workflow
+
+### Using Visual Studio
+
+1. **Open Solution**: Double-click `Etiquetas.sln`
+2. **Build**: Press `Ctrl+Shift+B` or Build → Build Solution
+3. **Run**: Press `F5` (with debugging) or `Ctrl+F5` (without debugging)
+4. **Debug**: Set breakpoints, press `F5`, use debugger tools
+
+### Using Visual Studio Code
+
+1. **Open Folder**: Open the `Etiquetas` folder
+2. **Install C# Extension**: Install C# Dev Kit extension
+3. **Build**: Terminal → Run Task → `build`
+4. **Run**: Press `F5` (requires launch.json configuration)
+
+### Using Command Line
+
+```bash
+# Navigate to project directory
+cd Etiquetas
+
+# Restore dependencies
+dotnet restore
+
+# Build
+dotnet build
+
+# Run
+dotnet run
+```
+
+## Debugging
+
+### Enable Detailed Build Output
+
+```bash
+dotnet build --verbosity detailed
+```
+
+### Debug Configuration
+
+The application is built with debug symbols by default in Debug configuration.
+
+**Debug Features**:
+- Full stack traces with line numbers
+- Variable inspection
+- Breakpoint support
+- Exception details
+
+### Console Output (Development)
+
+To see console output during development, temporarily change `OutputType`:
+
+```xml Etiquetas.csproj
+<OutputType>Exe</OutputType>  <!-- Shows console window -->
+```
+
+Change back to `WinExe` for production builds.
+
+## Common Build Issues
+
+### Issue: SDK Not Found
+
+**Error**: "The current .NET SDK does not support targeting .NET 8.0"
+
+**Solution**: Install .NET 8.0 SDK or later
+```bash
+winget install Microsoft.DotNet.SDK.8
+```
+
+### Issue: Windows Forms Not Available
+
+**Error**: "Windows Forms is not supported on this platform"
+
+**Solution**: Ensure you're building on Windows and the SDK is `net8.0-windows`
+
+### Issue: Missing Resources
+
+**Error**: "Could not find resource 'Properties.Resources.Daikin_logo'"
+
+**Solution**: Ensure resource files are present in `Properties/Resources.resx`
+
+### Issue: HTTP Request Failures
+
+**Error**: "Error en la solicitud: Unable to connect"
+
+**Solution**: Check network connectivity and API endpoint availability
+
+## Build Optimization
+
+### Speed Up Builds
+
+```bash
+# Skip restore if dependencies haven't changed
+dotnet build --no-restore
+
+# Build without running
+dotnet build --no-run
+```
+
+### Parallel Builds
+
+```bash
+dotnet build /maxcpucount
+```
+
+## Continuous Integration
+
+### GitHub Actions Example
+
+```yaml .github/workflows/build.yml
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Publish
+      run: dotnet publish --configuration Release --runtime win-x64 --self-contained true
+```
+
+## Version Management
+
+Add version information to the project file:
+
+```xml Etiquetas.csproj
+<PropertyGroup>
+  <Version>1.0.0</Version>
+  <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  <FileVersion>1.0.0.0</FileVersion>
+  <Company>Daikin</Company>
+  <Product>Etiquetas</Product>
+  <Copyright>Copyright © Daikin 2024</Copyright>
+</PropertyGroup>
+```
+
+## Deployment Checklist
+
+<Steps>
+  <Step title="Build Release Version">
+    ```bash
+    dotnet build --configuration Release
+    ```
+  </Step>
+  
+  <Step title="Run Tests (if applicable)">
+    ```bash
+    dotnet test
+    ```
+  </Step>
+  
+  <Step title="Publish Application">
+    ```bash
+    dotnet publish --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true
+    ```
+  </Step>
+  
+  <Step title="Test Published Build">
+    Run the published executable on a clean machine to verify it works without dependencies.
+  </Step>
+  
+  <Step title="Distribute">
+    Copy the published files or single executable to target machines.
+  </Step>
+</Steps>
+
+## Next Steps
+
+After building successfully:
+
+- Review [Architecture](/developer-guide/architecture) for code structure
+- Check [API Integration](/developer-guide/api-integration) for API details
+- See [UI Components](/developer-guide/ui-components) for interface customization

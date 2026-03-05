@@ -1,0 +1,102 @@
+---
+title: 'System Requirements'
+description: 'Hardware, software, and network requirements for Daikin Etiquetas'
+---
+
+## Operating System
+
+Daikin Etiquetas requires a Windows operating system:
+
+- **Windows 10** (version 1809 or later)
+- **Windows 11** (all versions)
+- **Windows Server 2019** or later
+
+<Note>
+The application is built with .NET 8.0 Windows Forms and requires a Windows environment to run.
+</Note>
+
+## Software Requirements
+
+### .NET Runtime
+
+The application requires the **.NET 8.0 Runtime** to be installed on the system:
+
+- **Minimum version**: .NET 8.0
+- **Target framework**: `net8.0-windows`
+- **Download**: [.NET 8.0 Runtime for Windows Desktop](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+<Warning>
+Make sure to install the **Desktop Runtime** which includes Windows Forms support, not just the base runtime.
+</Warning>
+
+### Dependencies
+
+The following NuGet packages are included:
+
+| Package | Version | Purpose |
+|---------|---------|----------|
+| System.Net.Http | 4.3.4 | HTTP client for API communication |
+
+<Note>
+Dependencies are bundled with the application and do not require separate installation.
+</Note>
+
+## Hardware Requirements
+
+Daikin Etiquetas has minimal hardware requirements typical for Windows Forms applications:
+
+### Minimum
+
+- **Processor**: 1 GHz or faster
+- **RAM**: 512 MB
+- **Disk Space**: 100 MB available space
+- **Display**: 1024x768 screen resolution
+
+### Recommended
+
+- **Processor**: 2 GHz dual-core or faster
+- **RAM**: 2 GB or more
+- **Disk Space**: 500 MB available space
+- **Display**: 1920x1080 screen resolution
+
+## Network Requirements
+
+### Internet Connectivity
+
+An active internet connection is required to:
+
+- Query the Daikin part number lookup API
+- Retrieve supplier and Daikin part number mappings
+
+### API Access
+
+The application connects to the following endpoint:
+
+- **Host**: `azuappsrvuat01v.mcquay.com`
+- **Protocol**: HTTPS (port 443)
+- **Endpoint**: `/SupportDashboard/Home/GetReportData`
+
+<Warning>
+Ensure your firewall allows outbound HTTPS connections to `azuappsrvuat01v.mcquay.com`. The application will not function without API access.
+</Warning>
+
+### Network Configuration
+
+If you're behind a corporate firewall or proxy:
+
+1. Whitelist the API hostname: `azuappsrvuat01v.mcquay.com`
+2. Allow HTTPS traffic on port 443
+3. Configure proxy settings if required by your network
+
+## Additional Requirements
+
+### Permissions
+
+- Standard user permissions are sufficient
+- No administrator rights required for normal operation
+- Print functionality may require printer driver access
+
+### Optional
+
+- **Printer**: Required only if using the label printing feature
+- **Network printer access**: If printing to network printers

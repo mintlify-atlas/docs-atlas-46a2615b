@@ -1,0 +1,290 @@
+---
+title: 'Searching for Parts'
+description: 'Learn how to search for Daikin parts using supplier part numbers'
+icon: 'magnifying-glass'
+---
+
+## Overview
+
+The Daikin Etiquetas application allows you to search for Daikin part numbers by entering a supplier's part number. The application queries an internal API and displays all matching results in a data grid.
+
+## How to Search
+
+### Step 1: Enter Supplier Part Number
+
+1. Locate the search input field (`txtSupplierP_N`) in the center of the application
+2. Click on the field - the placeholder text "Supplier Part Number" will clear
+3. Type or paste the supplier's part number
+4. The text will appear in white, bold Arial 14.25pt font
+5. A floating label "Supplier Part Number" will appear above the input field
+
+<Note>
+The input field accepts any text format. Ensure you enter the part number exactly as provided by the supplier.
+</Note>
+
+### Step 2: Click Search
+
+Click the **Search** button (`btnSearch`) located below the input field. The button:
+- Displays "Search" text in Segoe UI 12pt Bold
+- Shows a hand cursor when hovering
+- Triggers the search operation when clicked
+
+## Search Process
+
+### Input Validation
+
+Before sending the API request, the application validates your input (`Form1.cs:95`):
+
+```csharp
+if (string.IsNullOrWhiteSpace(txtSupplierP_N.Text) || txtSupplierP_N.Text == "Supplier Part Number")
+{
+    MessageBox.Show("Please enter a Supplier Part Number", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+    return;
+}
+```
+
+The search will be blocked if:
+- The input field is empty
+- The input contains only whitespace
+- The placeholder text "Supplier Part Number" is still present
+
+<Warning>
+You will see a warning dialog: "Please enter a Supplier Part Number" if validation fails.
+</Warning>
+
+### API Integration
+
+The application makes an asynchronous HTTP GET request to the internal Daikin support dashboard API (`Form1.cs:124`):
+
+**API Endpoint:**
+```
+https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData
+```
+
+**Request Parameters:**
+- `id`: Report identifier (fixed value: `2167`)
+- `parameters`: JSON object containing the supplier part number
+
+**Example Request URL:**
+```
+https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData?id=2167&parameters={"supplier_part_number":"ABC123"}
+```
+
+### API Request Implementation
+
+The request is handled by the `GetDataFromApi()` method (`Form1.cs:124`):
+
+```csharp
+private async Task GetDataFromApi()
+{
+    using (HttpClient client = new HttpClient())
+    {
+        string supplierPartNumber = txtSupplierP_N.Text.Trim();
+        string url = $"https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData?id=2167&parameters={{\"supplier_part_number\":\"{supplierPartNumber}\"}}";
+        
+        try
+        {
+            HttpResponseMessage response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string responseBody = await response.Content.ReadAsStringAsync();
+            
+            ProcessApiResponse(responseBody);
+        }
+        catch (HttpRequestException ex)
+        {
+            MessageBox.Show($"Error en la solicitud: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+}
+```
+
+<Tip>
+The supplier part number is automatically trimmed of leading and trailing whitespace before sending to the API.
+</Tip>
+
+## Understanding Search Results
+
+### Response Format
+
+The API returns JSON data as an array of objects. Each object contains:
+
+- `Supplier_Part_number` - The supplier's part number
+- `Daikin_Part_Number` - The corresponding Daikin part number
+
+**Example Response:**
+```json
+[
+  {
+    "Supplier_Part_number": "SUP123",
+    "Daikin_Part_Number": "DKN456789"
+  },
+  {
+    "Supplier_Part_number": "SUP123",
+    "Daikin_Part_Number": "DKN987654"
+  }
+]
+```
+
+### Results Display
+
+When the API responds successfully, the results grid (`daikinPartN_tbl`) becomes visible and displays all matches.
+
+The `ProcessApiResponse()` method (`Form1.cs:146`) handles parsing and displaying results:
+
+```csharp
+private void ProcessApiResponse(string jsonResponse)
+{
+    try
+    {
+        daikinPartN_tbl.Rows.Clear();
+        
+        var results = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonResponse);
+        
+        foreach (var result in results)
+        {
+            daikinPartN_tbl.Rows.Add(
+                "Print",
+                result["Supplier_Part_number"],
+                result["Daikin_Part_Number"]
+            );
+        }
+    }
+    catch (JsonException ex)
+    {
+        MessageBox.Show($"Error procesando la respuesta: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+```
+
+Each row in the grid displays:
+
+<Accordion title="Column 1: Print Button">
+A clickable "Print" button that allows you to print a label for this specific part number combination.
+</Accordion>
+
+<Accordion title="Column 2: Supplier Part Number">
+The supplier's part number exactly as returned from the API.
+</Accordion>
+
+<Accordion title="Column 3: Daikin Part Number">
+The corresponding Daikin internal part number.
+</Accordion>
+
+## Handling Multiple Matches
+
+### One-to-Many Relationships
+
+A single supplier part number may correspond to multiple Daikin part numbers. The application handles this by:
+
+1. Displaying all matches in separate rows
+2. Providing a Print button for each match
+3. Allowing you to select which specific part to print
+
+<Note>
+If you see multiple rows, this means the supplier part number maps to several different Daikin parts. Review each carefully before printing.
+</Note>
+
+### No Results
+
+If the API returns an empty array (`[]`):
+- The results grid will be visible but empty (no rows)
+- The grid headers (Print, Supplier Part Number, Daikin Part Number) will still be displayed
+- No error message appears - this indicates the part number was not found in the system
+
+<Tip>
+If you receive no results, double-check the part number for typos or contact your supplier for the correct format.
+</Tip>
+
+## Error Scenarios
+
+### Network Errors
+
+If the HTTP request fails (`Form1.cs:139`), you'll see an error dialog:
+
+**Error Message:**
+```
+Error en la solicitud: [detailed error message]
+```
+
+Common causes:
+- Network connectivity issues
+- API server unavailable
+- VPN connection required
+- Firewall blocking the request
+
+<Warning>
+Network errors display in Spanish: "Error en la solicitud". The specific HTTP error details follow in the message.
+</Warning>
+
+### JSON Parsing Errors
+
+If the API returns invalid JSON or an unexpected format (`Form1.cs:164`), you'll see:
+
+**Error Message:**
+```
+Error procesando la respuesta: [detailed error message]
+```
+
+This typically indicates:
+- API response format has changed
+- Corrupted data received
+- Server returned an error page instead of JSON
+
+<Warning>
+JSON errors display in Spanish: "Error procesando la respuesta". The specific parsing error details follow in the message.
+</Warning>
+
+### HTTP Status Errors
+
+The `response.EnsureSuccessStatusCode()` call (`Form1.cs:134`) will throw an exception if the server returns:
+
+- `400 Bad Request` - Invalid parameters sent
+- `401 Unauthorized` - Authentication required
+- `404 Not Found` - API endpoint doesn't exist
+- `500 Internal Server Error` - Server-side error
+
+These will be caught and displayed as "Error en la solicitud" messages.
+
+## Search Tips
+
+<Tip>
+**Exact Matching**: The search performs exact matching on supplier part numbers. Partial matches are not supported.
+</Tip>
+
+<Tip>
+**Case Sensitivity**: Check with your data administrator whether part number searches are case-sensitive in the backend database.
+</Tip>
+
+<Tip>
+**Special Characters**: If your part numbers contain special characters (hyphens, slashes, etc.), enter them exactly as formatted.
+</Tip>
+
+<Tip>
+**Whitespace Handling**: Leading and trailing spaces are automatically removed, but spaces within the part number are preserved.
+</Tip>
+
+## Technical Details
+
+### Asynchronous Operation
+
+The search operation runs asynchronously (`async/await` pattern) to prevent the UI from freezing:
+
+- The Search button click handler is `async void` (`Form1.cs:95`)
+- The API call uses `await client.GetAsync(url)` (`Form1.cs:133`)
+- The UI remains responsive during the network request
+
+### Thread Safety
+
+UI updates are performed on the main thread:
+- `MessageBox.Show()` calls are safe
+- `daikinPartN_tbl.Rows` operations occur after await completion
+- No explicit thread marshaling required (handled by async/await)
+
+### Resource Management
+
+The `HttpClient` is properly disposed using a `using` statement (`Form1.cs:126`), ensuring network resources are released after each search.
+
+## Related Pages
+
+- [Printing Labels](/user-guide/printing-labels) - Learn how to print labels after searching
+- [Interface Overview](/user-guide/interface-overview) - Detailed guide to the application interface

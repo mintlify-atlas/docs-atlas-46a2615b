@@ -1,0 +1,374 @@
+---
+title: 'Printing Labels'
+description: 'How to print Daikin part number labels from search results'
+icon: 'print'
+---
+
+## Overview
+
+After searching for parts, you can print labels that display both the supplier part number and the corresponding Daikin part number. Each search result row includes a dedicated Print button for immediate label printing.
+
+## Printing Process
+
+### Step 1: Perform a Search
+
+Before you can print labels, you must first:
+1. Enter a supplier part number in the search field
+2. Click the **Search** button
+3. Wait for results to appear in the data grid
+
+<Note>
+The results grid (`daikinPartN_tbl`) must contain at least one row with matching parts before printing is available.
+</Note>
+
+### Step 2: Review Search Results
+
+The results grid displays three columns:
+
+| Column | Description |
+|--------|-------------|
+| **Print** | Button column for printing this specific part |
+| **Supplier Part Number** | The supplier's part number from your search |
+| **Daikin Part Number** | The corresponding Daikin internal part number |
+
+### Step 3: Select Part to Print
+
+Click the **Print** button in the row containing the part number combination you want to print.
+
+<Tip>
+If multiple rows are returned (one supplier part maps to multiple Daikin parts), you can print labels for each combination individually by clicking the respective Print buttons.
+</Tip>
+
+## Print Button Implementation
+
+### Button Column Setup
+
+The Print button column is configured in `SetupDataGridView()` method (`Form1.cs:107`):
+
+```csharp
+private void SetupDataGridView()
+{
+    daikinPartN_tbl.Columns.Clear();
+    
+    DataGridViewButtonColumn btnColumn = new DataGridViewButtonColumn();
+    btnColumn.HeaderText = "Print";
+    btnColumn.Name = "Print";
+    btnColumn.Text = "Print";
+    btnColumn.UseColumnTextForButtonValue = true;
+    
+    daikinPartN_tbl.Columns.Add(btnColumn);
+    daikinPartN_tbl.Columns.Add("SupplierPartNumber", "Supplier Part Number");
+    daikinPartN_tbl.Columns.Add("DaikinPartNumber", "Daikin Part Number");
+    
+    daikinPartN_tbl.CellClick += daikinPartN_tbl_CellClick;
+}
+```
+
+Key properties:
+- `UseColumnTextForButtonValue = true` - Displays "Print" text on all buttons
+- Button appears in column index 0 (first column)
+- Column header also shows "Print"
+
+### Click Event Handling
+
+When you click a Print button, the `daikinPartN_tbl_CellClick` event handler executes (`Form1.cs:169`):
+
+```csharp
+private void daikinPartN_tbl_CellClick(object sender, DataGridViewCellEventArgs e)
+{
+    if (e.ColumnIndex == 0 && e.RowIndex >= 0)
+    {
+        string supplierPartNumber = daikinPartN_tbl.Rows[e.RowIndex].Cells["SupplierPartNumber"].Value.ToString();
+        string daikinPartNumber = daikinPartN_tbl.Rows[e.RowIndex].Cells["DaikinPartNumber"].Value.ToString();
+        
+        HandlePrint(supplierPartNumber, daikinPartNumber);
+    }
+}
+```
+
+The event handler:
+1. Checks if column index is 0 (Print button column)
+2. Verifies the row index is valid (>= 0, not a header click)
+3. Extracts the supplier part number from the clicked row
+4. Extracts the Daikin part number from the clicked row
+5. Calls `HandlePrint()` with both part numbers
+
+<Note>
+Clicking on the column header or other columns does nothing - only clicks on the Print buttons in data rows trigger the print action.
+</Note>
+
+## Label Content
+
+### Part Numbers Included
+
+Each label contains two key pieces of information:
+
+<Accordion title="Supplier Part Number">
+The original supplier's part number from your search query. This is retrieved from the `SupplierPartNumber` cell in the clicked row.
+</Accordion>
+
+<Accordion title="Daikin Part Number">
+The corresponding Daikin internal part number from the API response. This is retrieved from the `DaikinPartNumber` cell in the clicked row.
+</Accordion>
+
+### Print Handler
+
+The `HandlePrint()` method (`Form1.cs:180`) currently displays a confirmation message:
+
+```csharp
+private void HandlePrint(string supplierPartNumber, string daikinPartNumber)
+{
+    MessageBox.Show($"Imprimiendo etiqueta para:\nSupplier PN: {supplierPartNumber}\nDaikin PN: {daikinPartNumber}");
+}
+```
+
+**Message Display:**
+```
+Imprimiendo etiqueta para:
+Supplier PN: [supplier part number]
+Daikin PN: [daikin part number]
+```
+
+<Warning>
+The confirmation message is in Spanish: "Imprimiendo etiqueta para" ("Printing label for").
+</Warning>
+
+## Current Implementation Status
+
+### Placeholder Functionality
+
+The current implementation (`Form1.cs:180`) is a **placeholder** that shows a message box instead of actually printing. This implementation:
+
+✅ **Does:**
+- Captures the correct supplier part number
+- Captures the correct Daikin part number
+- Displays confirmation with both values
+- Provides the foundation for print integration
+
+❌ **Does Not:**
+- Send to physical printer
+- Generate label format/layout
+- Create print preview
+- Save print history
+
+<Note>
+This is a functional placeholder ready for print driver integration. The part numbers are correctly extracted and passed to the print handler.
+</Note>
+
+## Integration Points for Print Driver
+
+To integrate actual label printing, the `HandlePrint()` method should be modified to:
+
+### Option 1: Windows Print Framework
+
+```csharp
+private void HandlePrint(string supplierPartNumber, string daikinPartNumber)
+{
+    // Create PrintDocument
+    PrintDocument pd = new PrintDocument();
+    pd.PrintPage += (sender, e) => {
+        // Draw label content
+        e.Graphics.DrawString($"Supplier PN: {supplierPartNumber}", 
+                             new Font("Arial", 12), Brushes.Black, new PointF(10, 10));
+        e.Graphics.DrawString($"Daikin PN: {daikinPartNumber}", 
+                             new Font("Arial", 12), Brushes.Black, new PointF(10, 40));
+    };
+    
+    // Send to printer
+    pd.Print();
+}
+```
+
+### Option 2: Label Printer SDK
+
+Many label printers (Zebra, Dymo, Brother) have .NET SDKs:
+
+```csharp
+private void HandlePrint(string supplierPartNumber, string daikinPartNumber)
+{
+    // Example: Zebra printer
+    using (var printer = new ZebraPrinter())
+    {
+        printer.AddText($"Supplier PN: {supplierPartNumber}");
+        printer.AddText($"Daikin PN: {daikinPartNumber}");
+        printer.Print();
+    }
+}
+```
+
+### Option 3: ZPL/EPL Template
+
+Send raw printer commands for label printers:
+
+```csharp
+private void HandlePrint(string supplierPartNumber, string daikinPartNumber)
+{
+    string zpl = $@"^XA
+                    ^FO50,50^A0N,30,30^FDSupplier PN: {supplierPartNumber}^FS
+                    ^FO50,100^A0N,30,30^FDDaikin PN: {daikinPartNumber}^FS
+                    ^XZ";
+    
+    // Send to printer port or network
+    SendToPrinter(zpl);
+}
+```
+
+<Tip>
+The method signature and parameter passing are already correct - you only need to replace the MessageBox.Show() call with actual printer code.
+</Tip>
+
+## Label Format Considerations
+
+### Recommended Label Content
+
+When implementing the print driver, consider including:
+
+1. **Supplier Part Number** - Prominently displayed
+2. **Daikin Part Number** - Prominently displayed
+3. **Barcode** - For scanning (Code 39, Code 128, or QR code)
+4. **Print Date** - Timestamp of when label was created
+5. **Company Logo** - Daikin branding
+6. **Additional Metadata** - Description, warehouse location, etc.
+
+### Label Size
+
+Common label sizes for warehouse applications:
+- 4" x 6" (102mm x 152mm) - Standard shipping label
+- 4" x 3" (102mm x 76mm) - Medium parts label
+- 2" x 1" (51mm x 25mm) - Small parts label
+
+<Note>
+The label size should match your physical label printer's specifications and label stock.
+</Note>
+
+## Troubleshooting Print Issues
+
+### Print Button Not Responding
+
+<Accordion title="Results grid is not visible">
+The print buttons only appear after a successful search. Ensure you've entered a supplier part number and clicked Search.
+</Accordion>
+
+<Accordion title="Clicking outside the button">
+Make sure you're clicking directly on the Print button cell (column 0), not on the row elsewhere.
+</Accordion>
+
+<Accordion title="No rows in results">
+If your search returned no results, there are no Print buttons available. Try a different supplier part number.
+</Accordion>
+
+### Message Box Not Appearing
+
+<Warning>
+If the message box doesn't appear when clicking Print, check that:
+- The row index is valid (>= 0)
+- The cells contain data (not null)
+- No exceptions are being silently caught
+</Warning>
+
+### Invalid Part Numbers
+
+If the message box shows incorrect or empty part numbers:
+
+1. Verify the API response contains `Supplier_Part_number` and `Daikin_Part_Number` fields
+2. Check that `ProcessApiResponse()` is correctly populating the grid columns
+3. Ensure column names match: `"SupplierPartNumber"` and `"DaikinPartNumber"`
+
+## Multiple Label Printing
+
+### Printing Multiple Parts
+
+To print labels for multiple parts:
+
+1. Click the Print button for the first part
+2. Wait for confirmation/print to complete
+3. Click the Print button for the next part
+4. Repeat for each part you need
+
+<Tip>
+There is no "Print All" feature. Each label must be printed individually by clicking its respective Print button.
+</Tip>
+
+### Batch Printing Workflow
+
+If you need to print multiple labels for the same supplier part:
+
+1. Perform one search
+2. Click Print on the desired row
+3. The confirmation shows which combination is being printed
+4. Repeat clicking the same Print button if you need multiple copies
+
+<Note>
+The application doesn't track print count or prevent duplicate prints. You can click the same Print button multiple times.
+</Note>
+
+## Technical Details
+
+### Data Grid Read-Only Mode
+
+The results grid is configured as read-only (`Form1.Designer.cs:76`):
+
+```csharp
+daikinPartN_tbl.ReadOnly = true;
+```
+
+This means:
+- Users cannot edit cell values
+- Only button clicks are interactive
+- Prevents accidental data modification
+
+### Cell Value Extraction
+
+Part numbers are extracted using cell names (`Form1.cs:173`):
+
+```csharp
+string supplierPartNumber = daikinPartN_tbl.Rows[e.RowIndex].Cells["SupplierPartNumber"].Value.ToString();
+string daikinPartNumber = daikinPartN_tbl.Rows[e.RowIndex].Cells["DaikinPartNumber"].Value.ToString();
+```
+
+- Uses column **names** (not indexes) for reliability
+- Calls `.ToString()` to convert cell values to strings
+- Assumes cells contain non-null data
+
+### Event Handler Registration
+
+The cell click event is registered during grid setup (`Form1.cs:121`):
+
+```csharp
+daikinPartN_tbl.CellClick += daikinPartN_tbl_CellClick;
+```
+
+This ensures the handler is attached before any search results are displayed.
+
+## Future Enhancements
+
+Potential improvements to the printing functionality:
+
+<Accordion title="Print Preview">
+Add a preview dialog showing the label layout before sending to printer, allowing users to verify content and make adjustments.
+</Accordion>
+
+<Accordion title="Printer Selection">
+Allow users to choose which label printer to use if multiple printers are available on the network.
+</Accordion>
+
+<Accordion title="Print History">
+Log all printed labels with timestamp, user, and part numbers for audit trail and reprint capability.
+</Accordion>
+
+<Accordion title="Batch Print">
+Add a "Print All" button or checkboxes to select multiple parts for printing in one operation.
+</Accordion>
+
+<Accordion title="Print Settings">
+Provide configuration dialog for label size, orientation, printer settings, and content customization.
+</Accordion>
+
+<Accordion title="Copy Count">
+Add a prompt asking how many copies of each label to print before sending to printer.
+</Accordion>
+
+## Related Pages
+
+- [Searching for Parts](/user-guide/searching-parts) - Learn how to search before printing
+- [Interface Overview](/user-guide/interface-overview) - Detailed guide to the application interface

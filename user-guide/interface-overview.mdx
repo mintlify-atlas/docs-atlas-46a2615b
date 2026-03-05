@@ -1,0 +1,168 @@
+---
+title: 'Interface Overview'
+description: 'Complete guide to the Daikin Etiquetas application interface'
+icon: 'window'
+---
+
+## Application Window
+
+Daikin Etiquetas features a modern, borderless dark theme interface built with Windows Forms. The application window (`Form1`) is centered on screen at startup with dimensions of 1235x841 pixels.
+
+<Note>
+The application uses a custom window frame without the standard Windows title bar, providing a sleek, modern appearance.
+</Note>
+
+## Window Layout
+
+The interface is divided into several key sections:
+
+### Top Panel (`pnlTop`)
+
+The top panel features a dark background (`Color.FromArgb(30, 30, 30)`) and contains:
+
+- **Application Icon** (`pcbPichonKun`) - Displayed on the left side
+- **Title Label** (`lblTitle`) - Shows "Etiquetas" in Microsoft YaHei 15.75pt font
+- **Minimize Button** (`minimizeLbl`) - Underscore character ("_") that turns red on hover
+- **Close Button** (`CloseLbl`) - "X" character that turns red on hover
+
+<Tip>
+You can drag the window by clicking and holding on either the top panel or the title label.
+</Tip>
+
+### Main Background (`pnlBackground`)
+
+The main content area uses a dark gray background (`Color.FromArgb(45, 45, 45)`) and contains:
+
+#### Daikin Logo
+- Large Daikin logo image (`pictureBox1`) displayed prominently at the top
+- Size: 543x196 pixels
+- Uses stretch mode for proper scaling
+
+#### Search Input Section
+
+**Text Input Field** (`txtSupplierP_N`)
+- Borderless text box with dark background matching the main panel
+- Placeholder text: "Supplier Part Number" in italic gray (`Color.FromArgb(150, 150, 150)`)
+- Font changes to Arial 14.25pt Bold when typing
+- Text color changes to white (`Color.FromArgb(250, 250, 250)`) when active
+
+**Input Underline** (`lnSupplierP_N`)
+- White line (4 pixels height) beneath the text input
+- Width: 544 pixels
+
+**Floating Label** (`lblSupplierPartNumber`)
+- Appears above the input field when you start typing
+- Arial 12pt Bold Italic font
+- Gray color (`Color.FromArgb(150, 150, 150)`)
+- Initially hidden until text is entered
+
+#### Search Button (`btnSearch`)
+
+- Label: "Search"
+- Font: Segoe UI 12pt Bold
+- Positioned below the search input field
+- Changes cursor to hand pointer on hover
+- Size: 90x37 pixels
+
+### Results Grid (`daikinPartN_tbl`)
+
+The data grid view appears below the search section after performing a search:
+
+**Grid Properties:**
+- Background color: ControlDarkDark
+- Read-only mode (users cannot edit cells directly)
+- Auto-size columns to fill available width
+- User cannot add rows manually
+- Anchored to resize with the window
+
+**Grid Columns:**
+
+<Accordion title="Print Column">
+A button column that displays "Print" in each row. Clicking this button triggers the label printing functionality for that specific part number.
+</Accordion>
+
+<Accordion title="Supplier Part Number Column">
+Displays the supplier's part number exactly as returned from the API (`Supplier_Part_number` field).
+</Accordion>
+
+<Accordion title="Daikin Part Number Column">
+Displays the corresponding Daikin part number from the API (`Daikin_Part_Number` field).
+</Accordion>
+
+<Note>
+The results grid is hidden by default (`Visible = false`) and only appears after a successful search is performed.
+</Note>
+
+## Window Management
+
+### Moving the Window
+
+Since the application has no standard title bar, you can move the window by:
+
+1. Clicking and holding the left mouse button on the **top panel** (`pnlTop`)
+2. Clicking and holding the left mouse button on the **title label** ("Etiquetas")
+3. Dragging the window to your desired location
+
+The `moveFrm()` method in `/home/daytona/workspace/source/Etiquetas/Form1.cs:81` handles this functionality by tracking mouse position and updating the window's `Left` and `Top` properties.
+
+### Minimizing the Window
+
+Click the minimize button ("_" character) in the top-right corner:
+- Hovers red to indicate interactivity
+- Clicking minimizes the window to the taskbar (`WindowState.Minimized`)
+- See implementation at `Form1.cs:76`
+
+### Closing the Application
+
+Click the close button ("X" character) in the top-right corner:
+- Hovers red to indicate interactivity  
+- Clicking closes the application completely
+- See implementation at `Form1.cs:36`
+
+<Warning>
+Closing the window will immediately terminate the application. Make sure all printing operations are complete before closing.
+</Warning>
+
+## Color Scheme
+
+The application uses a consistent dark theme:
+
+| Element | Color Code | Description |
+|---------|-----------|-------------|
+| Top Panel | `Color.FromArgb(30, 30, 30)` | Darkest gray |
+| Main Background | `Color.FromArgb(45, 45, 45)` | Dark gray |
+| Text (Active) | `Color.FromArgb(250, 250, 250)` | Near white |
+| Text (Placeholder) | `Color.FromArgb(150, 150, 150)` | Medium gray |
+| Hover Effect | `Color.Red` | Red for close/minimize buttons |
+| Input Underline | `Color.White` | White |
+
+## User Experience Features
+
+### Visual Feedback
+
+- **Hover Effects**: Close and minimize buttons change to red when hovering
+- **Cursor Changes**: Interactive elements (buttons, close/minimize) show hand cursor
+- **Dynamic Labels**: Floating label appears above input field when typing
+- **Text Styling**: Input text changes from italic gray placeholder to bold white
+
+### Form Initialization
+
+When the application starts (`Form1.cs:9`):
+
+```csharp
+public Form1()
+{
+    InitializeComponent();
+    daikinPartN_tbl.Visible = false;
+    SetupDataGridView();
+}
+```
+
+1. Components are initialized
+2. Results grid is hidden
+3. Data grid columns are configured (Print button, Supplier PN, Daikin PN)
+4. Cell click event handler is registered
+
+<Tip>
+The results grid automatically resizes with the window thanks to anchor settings, ensuring optimal viewing regardless of window size.
+</Tip>

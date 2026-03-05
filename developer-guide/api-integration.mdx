@@ -1,0 +1,316 @@
+---
+title: API Integration
+description: Complete guide to the API integration implementation in Daikin Etiquetas
+---
+
+## Overview
+
+Daikin Etiquetas integrates with the McQuay Support Dashboard API to retrieve part number information. The integration is implemented using `HttpClient` with async/await patterns and JSON deserialization.
+
+## API Endpoint
+
+The application connects to a single API endpoint:
+
+<ParamField path="Base URL" type="string">
+  `https://azuappsrvuat01v.mcquay.com/SupportDashboard`
+</ParamField>
+
+<ParamField path="Endpoint" type="string">
+  `/Home/GetReportData`
+</ParamField>
+
+<ParamField path="Environment" type="string">
+  UAT (User Acceptance Testing)
+</ParamField>
+
+## Request Format
+
+### HTTP Method
+
+**GET** request with query parameters
+
+### Query Parameters
+
+<ParamField path="id" type="integer" required>
+  Report ID - Fixed value of `2167`
+</ParamField>
+
+<ParamField path="parameters" type="string" required>
+  JSON-encoded string containing the supplier part number query
+</ParamField>
+
+### Request URL Construction
+
+The API request is constructed in the `GetDataFromApi` method:
+
+```csharp Form1.cs:124-144
+private async Task GetDataFromApi()
+{
+    using (HttpClient client = new HttpClient())
+    {
+        string supplierPartNumber = txtSupplierP_N.Text.Trim();
+        string url = $"https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData?id=2167&parameters={{\"supplier_part_number\":\"{supplierPartNumber}\"}}";
+        
+        try
+        {
+            HttpResponseMessage response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string responseBody = await response.Content.ReadAsStringAsync();
+            
+            ProcessApiResponse(responseBody);
+        }
+        catch (HttpRequestException ex)
+        {
+            MessageBox.Show($"Error en la solicitud: {ex.Message}", 
+                          "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+}
+```
+
+### Example Request URL
+
+For supplier part number `ABC-12345`:
+
+```
+https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData?id=2167&parameters={"supplier_part_number":"ABC-12345"}
+```
+
+## Request Parameters Object
+
+The parameters query string contains a JSON object:
+
+```json
+{
+  "supplier_part_number": "ABC-12345"
+}
+```
+
+<ParamField path="supplier_part_number" type="string" required>
+  The supplier's part number to search for. This is URL-encoded in the query string.
+</ParamField>
+
+## Response Format
+
+The API returns a JSON array of objects:
+
+### Response Structure
+
+```json
+[
+  {
+    "Supplier_Part_number": "ABC-12345",
+    "Daikin_Part_Number": "DKN-67890"
+  },
+  {
+    "Supplier_Part_number": "ABC-12345",
+    "Daikin_Part_Number": "DKN-67891"
+  }
+]
+```
+
+### Response Fields
+
+<ResponseField name="Supplier_Part_number" type="string" required>
+  The supplier's part number (matches the search query)
+</ResponseField>
+
+<ResponseField name="Daikin_Part_Number" type="string" required>
+  The corresponding Daikin part number
+</ResponseField>
+
+<Note>
+  The API can return multiple Daikin part numbers for a single supplier part number.
+</Note>
+
+## Response Processing
+
+The `ProcessApiResponse` method deserializes and displays the results:
+
+```csharp Form1.cs:146-167
+private void ProcessApiResponse(string jsonResponse)
+{
+    try
+    {
+        daikinPartN_tbl.Rows.Clear();
+        
+        var results = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonResponse);
+        
+        foreach (var result in results)
+        {
+            daikinPartN_tbl.Rows.Add(
+                "Print",
+                result["Supplier_Part_number"],
+                result["Daikin_Part_Number"]
+            );
+        }
+    }
+    catch (JsonException ex)
+    {
+        MessageBox.Show($"Error procesando la respuesta: {ex.Message}", 
+                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+}
+```
+
+### Deserialization Details
+
+<ParamField path="Type" type="generic">
+  `List<Dictionary<string, object>>`
+</ParamField>
+
+<ParamField path="Serializer" type="library">
+  `System.Text.Json.JsonSerializer`
+</ParamField>
+
+The response is deserialized as a list of dictionaries to handle dynamic JSON structure without requiring a strongly-typed model class.
+
+## Error Handling
+
+### HTTP Request Errors
+
+```csharp Form1.cs:139-142
+catch (HttpRequestException ex)
+{
+    MessageBox.Show($"Error en la solicitud: {ex.Message}", 
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+}
+```
+
+**Catches:**
+- Network connectivity issues
+- DNS resolution failures
+- HTTP status code errors (via `EnsureSuccessStatusCode()`)
+- Timeout errors
+
+### JSON Deserialization Errors
+
+```csharp Form1.cs:163-166
+catch (JsonException ex)
+{
+    MessageBox.Show($"Error procesando la respuesta: {ex.Message}", 
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+}
+```
+
+**Catches:**
+- Malformed JSON responses
+- Unexpected JSON structure
+- Missing required fields
+
+### Input Validation
+
+Validation occurs before the API call:
+
+```csharp Form1.cs:97-101
+if (string.IsNullOrWhiteSpace(txtSupplierP_N.Text) || 
+    txtSupplierP_N.Text == "Supplier Part Number")
+{
+    MessageBox.Show("Please enter a Supplier Part Number", 
+                    "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+    return;
+}
+```
+
+## HttpClient Usage
+
+### Client Lifecycle
+
+```csharp Form1.cs:126
+using (HttpClient client = new HttpClient())
+```
+
+The `HttpClient` is instantiated within a `using` statement to ensure proper disposal after each request.
+
+<Warning>
+  **Best Practice Note**: For production applications, consider using a singleton or `IHttpClientFactory` to avoid socket exhaustion. The current implementation creates a new `HttpClient` for each request, which is acceptable for low-frequency operations but not optimal for high-volume scenarios.
+</Warning>
+
+### Request Flow
+
+1. **Create HttpClient** - New instance per request
+2. **Build URL** - Interpolate supplier part number into query string
+3. **Send GET Request** - `await client.GetAsync(url)`
+4. **Validate Response** - `response.EnsureSuccessStatusCode()`
+5. **Read Content** - `await response.Content.ReadAsStringAsync()`
+6. **Process Response** - Pass JSON string to `ProcessApiResponse()`
+7. **Dispose Client** - Automatic via `using` statement
+
+## Async/Await Pattern
+
+### Async Event Handler
+
+```csharp Form1.cs:95
+private async void btnSearch_Click(object sender, EventArgs e)
+```
+
+The button click event handler is marked `async void` to allow awaiting the API call while keeping the UI responsive.
+
+### Async Task Method
+
+```csharp Form1.cs:124
+private async Task GetDataFromApi()
+```
+
+The actual API call is in an `async Task` method, following best practices for async methods.
+
+### Await Chain
+
+```csharp
+await client.GetAsync(url)                    // Wait for HTTP response
+await response.Content.ReadAsStringAsync()    // Wait for body read
+```
+
+Both I/O operations are awaited to prevent blocking the UI thread.
+
+## Testing the API
+
+You can test the API endpoint directly using curl:
+
+<CodeGroup>
+
+```bash curl
+curl -X GET "https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData?id=2167&parameters={%22supplier_part_number%22:%22YOUR_PART_NUMBER%22}"
+```
+
+```powershell PowerShell
+Invoke-RestMethod -Uri "https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData?id=2167&parameters={`"supplier_part_number`":`"YOUR_PART_NUMBER`"}" -Method Get
+```
+
+</CodeGroup>
+
+<Note>
+  Replace `YOUR_PART_NUMBER` with an actual supplier part number to test.
+</Note>
+
+## Integration Points
+
+### Trigger Point
+
+**File**: `Form1.cs:95`  
+**Method**: `btnSearch_Click`  
+**Event**: User clicks the Search button
+
+### Processing Point
+
+**File**: `Form1.cs:124`  
+**Method**: `GetDataFromApi`  
+**Action**: Sends HTTP request and reads response
+
+### Display Point
+
+**File**: `Form1.cs:146`  
+**Method**: `ProcessApiResponse`  
+**Action**: Populates DataGridView with results
+
+## Response Mapping
+
+The API response fields map directly to DataGridView columns:
+
+| API Field | DataGridView Column | Display Name |
+|-----------|--------------------|--------------|
+| `Supplier_Part_number` | `SupplierPartNumber` | "Supplier Part Number" |
+| `Daikin_Part_Number` | `DaikinPartNumber` | "Daikin Part Number" |
+| N/A | `Print` | "Print" (button) |
+
+Mapping occurs in `Form1.cs:156-160`.
