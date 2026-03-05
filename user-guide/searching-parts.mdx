@@ -57,7 +57,7 @@ You will see a warning dialog: "Please enter a Supplier Part Number" if validati
 The application makes an asynchronous HTTP GET request to the internal Daikin support dashboard API (`Form1.cs:124`):
 
 **API Endpoint:**
-```
+```text
 https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData
 ```
 
@@ -66,7 +66,7 @@ https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData
 - `parameters`: JSON object containing the supplier part number
 
 **Example Request URL:**
-```
+```text
 https://azuappsrvuat01v.mcquay.com/SupportDashboard/Home/GetReportData?id=2167&parameters={"supplier_part_number":"ABC123"}
 ```
 
